@@ -53,36 +53,43 @@ jobs:
         run: npx playwright test
         shell: pwsh
 
-      # Upload Allure Raw Results
+      # Upload Allure Raw Results (for debugging / re-runs)
       - name: Upload Allure Raw Results
-        if: ${{ always() }}
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-results-stage
           path: reports/allure-results/
           retention-days: 7
 
-      # Generate Allure HTML Report
+      # 🧹 Clean old Allure report
+      - name: Clean previous Allure report
+        if: always()
+        run: rm -rf reports/allure-report || true
+        shell: pwsh
+
+      # Generate Allure HTML Report (always latest)
       - name: Generate Allure HTML Report
-        if: ${{ always() }}
+        if: always()
         run: |
           npm install -g allure-commandline
           npx allure generate reports/allure-results --clean -o reports/allure-report
         shell: pwsh
 
-      # Upload Allure HTML Report (as artifact)
+      # Upload Allure HTML Report (artifact)
       - name: Upload Allure HTML Report
-        if: ${{ always() }}
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: allure-report-stage
           path: reports/allure-report/
           retention-days: 7
 
-      # ✅ Deploy Allure Report to GitHub Pages
+      # ✅ Deploy Allure Report to GitHub Pages (overwrite old one)
       - name: Deploy Allure Report to GitHub Pages
-        if: ${{ always() }}
+        if: always()
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: reports/allure-report
+          publish_dir: ./reports/allure-report
+          force_orphan: true    # clears old history and pushes latest version
