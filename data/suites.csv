@@ -1,0 +1,3 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","8113","login + add items to cart","chromium","Wed Nov 12 12:36:29 UTC 2025","passed","Wed Nov 12 12:36:37 UTC 2025","Rahul shetty academy client","src\test\specs\clientApp.spec.js","",""
+"","90414","login + add items to cart","chromium","Wed Nov 12 12:38:09 UTC 2025","broken","Wed Nov 12 12:39:39 UTC 2025","Rahul shetty academy client","src\test\specs\demo.spec.js","",""
