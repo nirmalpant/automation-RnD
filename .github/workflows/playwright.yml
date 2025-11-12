@@ -1,0 +1,80 @@
+name: Playwright Tests (Stage)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  test-stage:
+    runs-on: windows-latest   # 👈 Use GitHub-hosted Windows runner
+    timeout-minutes: 60
+
+    env:
+      URL: ${{ secrets.URL }}
+      EMAIL: ${{ secrets.EMAIL }}
+      PASSWORD: ${{ secrets.PASSWORD }}
+      PRODUCTNAME: ${{ secrets.PRODUCTNAME }}
+
+    steps:
+      # Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm ci
+        shell: pwsh
+
+      # Install Playwright browsers (Chrome only for faster runs)
+      - name: Install Playwright Browsers
+        run: npx playwright install chromium
+        shell: pwsh
+
+      # Debug environment variables (optional)
+      - name: Debug environment variables
+        run: |
+          echo "URL=$env:URL"
+          echo "EMAIL=$env:EMAIL"
+          echo "PASSWORD=$env:PASSWORD"
+          echo "PRODUCTNAME=$env:PRODUCTNAME"
+        shell: pwsh
+
+      # Run Playwright tests
+      - name: Run Playwright Tests
+        run: npx playwright test
+        shell: pwsh
+
+      # Upload Allure Raw Results
+      - name: Upload Allure Raw Results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-stage
+          path: reports/allure-results/
+          retention-days: 7
+
+      # Generate Allure HTML Report
+      - name: Generate Allure HTML Report
+        if: ${{ always() }}
+        run: |
+          npm install -g allure-commandline
+          npx allure generate reports/allure-results --clean -o reports/allure-report
+        shell: pwsh
+
+      # Upload Allure HTML Report
+      - name: Upload Allure HTML Report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-stage
+          path: reports/allure-report/
+          retention-days: 7
