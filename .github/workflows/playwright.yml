@@ -62,10 +62,13 @@ jobs:
           path: reports/allure-results/
           retention-days: 7
 
-      # 🧹 Clean old Allure report
+      # 🧹 Clean old Allure report (PowerShell-safe)
       - name: Clean previous Allure report
         if: always()
-        run: rm -rf reports/allure-report || true
+        run: |
+          if (Test-Path "reports/allure-report") {
+            Remove-Item -Recurse -Force "reports/allure-report"
+          }
         shell: pwsh
 
       # Generate Allure HTML Report (always latest)
