@@ -19,41 +19,36 @@ jobs:
       PRODUCTNAME: ${{ secrets.PRODUCTNAME }}
 
     steps:
-      # Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
 
-      # Install dependencies
       - name: Install dependencies
         run: npm ci
         shell: pwsh
 
-      # Install Playwright browsers (Chrome only)
       - name: Install Playwright Browsers
         run: npx playwright install chromium
         shell: pwsh
 
-      # Debug environment variables
-      - name: Debug environment variables
+      # 🧹 Clean previous results before running new tests
+      - name: Clean old Allure results
         run: |
-          echo "URL=$env:URL"
-          echo "EMAIL=$env:EMAIL"
-          echo "PASSWORD=$env:PASSWORD"
-          echo "PRODUCTNAME=$env:PRODUCTNAME"
+          if (Test-Path "reports/allure-results") {
+            Remove-Item -Recurse -Force "reports/allure-results"
+          }
         shell: pwsh
 
-      # Run Playwright tests
+      # 🧪 Run Playwright Tests
       - name: Run Playwright Tests
         run: npx playwright test
         shell: pwsh
 
-      # Upload Allure Raw Results (for debugging / re-runs)
+      # Upload Allure Raw Results
       - name: Upload Allure Raw Results
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,7 +57,7 @@ jobs:
           path: reports/allure-results/
           retention-days: 7
 
-      # 🧹 Clean old Allure report (PowerShell compatible)
+      # 🧹 Clean old Allure report
       - name: Clean previous Allure report
         if: always()
         run: |
@@ -71,7 +66,7 @@ jobs:
           }
         shell: pwsh
 
-      # Generate Allure HTML Report (always latest)
+      # 🧾 Generate Allure HTML Report
       - name: Generate Allure HTML Report
         if: always()
         run: |
@@ -79,15 +74,7 @@ jobs:
           npx allure generate reports/allure-results --clean -o reports/allure-report
         shell: pwsh
 
-      # 🕒 Add timestamp file (forces Pages to refresh)
-      - name: Add timestamp to report
-        if: always()
-        run: |
-          $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-          echo "Last updated: $date" > reports/allure-report/update-info.txt
-        shell: pwsh
-
-      # Upload Allure HTML Report (artifact)
+      # 📤 Upload Allure HTML Report (artifact)
       - name: Upload Allure HTML Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -96,7 +83,7 @@ jobs:
           path: reports/allure-report/
           retention-days: 7
 
-      # ✅ Deploy Allure Report to GitHub Pages (always overwrites)
+      # ✅ Deploy latest Allure Report to GitHub Pages
       - name: Deploy Allure Report to GitHub Pages
         if: always()
         uses: peaceiris/actions-gh-pages@v3
@@ -104,4 +91,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./reports/allure-report
           force_orphan: true
-          keep_files: false
